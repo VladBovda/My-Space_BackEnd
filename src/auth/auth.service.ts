@@ -1,16 +1,15 @@
-import {Injectable, UnauthorizedException} from '@nestjs/common';
-import {UserService} from "src/user/user.service";
-import {JwtService} from "@nestjs/jwt";
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UserService } from "src/user/user.service";
+import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from 'bcrypt';
-import {User} from "src/user/user.entity";
-import { ref } from 'process';
+import { User } from "src/user/user.entity";
 
 @Injectable()
 export class AuthService {
     constructor(
         private userService: UserService,
         private jwtService: JwtService,
-    ) {}
+    ) { }
 
     async validateUser(username: string, password: string): Promise<User> {
         const user = await this.userService.findByUsername(username);
@@ -37,6 +36,10 @@ export class AuthService {
     }
 
     async refreshToken(refreshToken: string) {
+        if (!refreshToken) {
+            throw new UnauthorizedException('Refresh token is required');
+        }
+
         const isValid = await this.ValidateRefreshToken(refreshToken);
 
         if (!isValid) {
@@ -52,12 +55,19 @@ export class AuthService {
         };
     }
 
-    private async ValidateRefreshToken(refreshToken: string) {
-        const payload = this.jwtService.decode.verify(refreshToken);
+    private async ValidateRefreshToken(token: string) {
+        try {
+            const payload = this.jwtService.verify(token);
+            if (!payload?.username) {
+                return null;
+            }
 
-        if (!payload) {
+            return this.userService.findByUsername(payload.username);
+        } catch {
             return null;
         }
-        return this.userService.findByUsername(payload.username); 
+    }
+    private generateNewRefreshToken(userId: number) {
+        return this.jwtService.sign({ userId });
     }
 }

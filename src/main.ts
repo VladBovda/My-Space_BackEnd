@@ -7,10 +7,20 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('museum example')
-    .setDescription('The museum API description')
+    .setTitle('My Space API')
+    .setDescription('The my space API description')
     .setVersion('1.0')
-    .addTag('museum')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        in: 'header',
+        name: 'Authorization',
+        description: 'Enter access token',
+      },
+      'access-token',
+    )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
