@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,17 +11,21 @@ import { AuthModule } from './auth/auth.module';
 import { CommentModule } from './comment/comment.module';
 import { Comment } from './comment/comment.entity';
 
-
 @Module({
-  imports: [ TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: process.env.DB_USERNAME ?? 'admin',
-      password: process.env.DB_PASSWORD ?? 'admin',
-      database: process.env.DB_NAME ?? 'my_space',
-      entities: [User, Exhibit, Comment],
-      synchronize: true,
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST', 'localhost'),
+        port: Number(configService.get<string>('DB_PORT', '5432')),
+        username: configService.get<string>('DB_USERNAME', 'admin'),
+        password: configService.get<string>('DB_PASSWORD', 'admin'),
+        database: configService.get<string>('DB_NAME', 'my_space'),
+        entities: [User, Exhibit, Comment],
+        synchronize: true,
+      }),
     }),
     AuthModule,
     UserModule,

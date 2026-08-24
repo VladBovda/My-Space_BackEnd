@@ -1,10 +1,13 @@
-
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.enableCors();
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/static/' });
 
   const config = new DocumentBuilder()
     .setTitle('My Space API')
@@ -27,4 +30,7 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Failed to start application', err);
+  process.exit(1);
+});

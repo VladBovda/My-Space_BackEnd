@@ -1,7 +1,23 @@
-import {Controller, Post, Body, Get, Request, Query, NotFoundException, UseGuards, BadRequestException} from '@nestjs/common';
-import {UserService} from "./user.service";
-import {CreateUserDto} from "./dto/create-user.dto";
-import {ApiOperation, ApiTags, ApiResponse, ApiQuery, ApiBearerAuth} from "@nestjs/swagger";
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Request,
+  Query,
+  NotFoundException,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
+import { UserService } from './user.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import {
+  ApiOperation,
+  ApiTags,
+  ApiResponse,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { User } from './user.entity';
 import { plainToInstance } from 'class-transformer';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -12,7 +28,7 @@ const MinPasswordLength = 4;
 @Controller('users')
 @ApiTags('users')
 export class UserController {
-  constructor(private userService: UserService) { }
+  constructor(private userService: UserService) {}
 
   @ApiOperation({ summary: 'New user registration' })
   @ApiResponse({ status: 201, description: 'User successfully registered' })
@@ -20,13 +36,20 @@ export class UserController {
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     if (
-      (!createUserDto.username || !createUserDto.password) ||
-      (createUserDto.username.length < MinLoginLength) || (createUserDto.password.length < MinPasswordLength)
+      !createUserDto.username ||
+      !createUserDto.password ||
+      createUserDto.username.length < MinLoginLength ||
+      createUserDto.password.length < MinPasswordLength
     ) {
-      throw new BadRequestException(`The length of the username and password must be at least ${MinLoginLength} characters`);
+      throw new BadRequestException(
+        `The length of the username and password must be at least ${MinLoginLength} characters`,
+      );
     }
 
-    const user = await this.userService.create(createUserDto.username, createUserDto.password);
+    const user = await this.userService.create(
+      createUserDto.username,
+      createUserDto.password,
+    );
     return plainToInstance(User, user, { excludeExtraneousValues: true });
   }
 
@@ -44,9 +67,9 @@ export class UserController {
       throw new BadRequestException('ID or username must be provided');
     }
 
-    const user = id ? 
-      await this.userService.findById(id) :
-      await this.userService.findByUsername(username!);
+    const user = id
+      ? await this.userService.findById(id)
+      : await this.userService.findByUsername(username!);
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -71,4 +94,3 @@ export class UserController {
     return plainToInstance(User, user, { excludeExtraneousValues: true });
   }
 }
-
